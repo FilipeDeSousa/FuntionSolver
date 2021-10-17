@@ -1,3 +1,3 @@
 module minMax {
-	exports minMax;
+	exports function;
 }
