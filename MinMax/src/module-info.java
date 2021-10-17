@@ -1,0 +1,3 @@
+module minMax {
+	exports minMax;
+}
