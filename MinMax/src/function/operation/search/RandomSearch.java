@@ -9,14 +9,14 @@ public class RandomSearch extends SearchMethod {
 	}
 
 	@Override
-	public double[] createSearchPoints(double[] interval) {
+	public SearchPoint[] createSearchPoints(double[] interval) {
 		if(points != null)
 			return points;
 		
-		points = new double[numberPoints];
+		points = new SearchPoint[numberPoints];
 		Random random = new Random();
 		for(int i=0; i<numberPoints; i++) {
-			points[i] = random.nextDouble(interval[0], interval[1]);
+			points[i] = new SearchPoint(random.nextDouble(interval[0], interval[1]));
 		}
 		return points;
 	}

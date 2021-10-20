@@ -7,14 +7,14 @@ public class UniformIntervalsSearch extends SearchMethod {
 	}
 
 	@Override
-	public double[] createSearchPoints(double[] interval) {
+	public SearchPoint[] createSearchPoints(double[] interval) {
 		if(points != null)
 			return points;
 		
 		double step=(interval[1]-interval[0])/(numberPoints+1.0);
-		points = new double[numberPoints];
+		points = new SearchPoint[numberPoints];
 		for(int i=0; i<numberPoints; i++) {
-			points[i] = interval[0]+step;
+			points[i] = new SearchPoint(interval[0]+step);
 		}
 		return points;
 	}

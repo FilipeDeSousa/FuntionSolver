@@ -8,10 +8,10 @@ public abstract class SearchMethod {
 	
 	//Attributes
 	int numberPoints;
-	double[] points;
+	SearchPoint[] points;
 	
 	//Abstract methods
-	public abstract double[] createSearchPoints(double[] interval);
+	public abstract SearchPoint[] createSearchPoints(double[] interval);
 
 	//Constructor
 	public SearchMethod(int numberPoints) {

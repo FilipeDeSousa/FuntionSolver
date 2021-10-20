@@ -2,6 +2,8 @@ package function;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Scanner;
 
 import function.operation.Operation;
@@ -13,12 +15,16 @@ import function.operation.search.SearchMethod.SearchMethodOption;
 import function.operation.search.UniformIntervalsSearch;
 
 public class FunctionSolver {
+	//Attributes
 	static double epsilon=1E-3;
 	static int numberIterations = 100;
 	static boolean printsIterations = false;
+	static boolean printsTimeElapsed = false;
+	//Optimizer attributes
 	static boolean optimizerOn = false;
 	static int numberSearchPoints = 10;
 	static SearchMethod.SearchMethodOption searchMethodOption = SearchMethodOption.Random; static SearchMethod searchMethod;
+	static boolean enableDegrade = false;
 	
 	//Getters
 	public static double getEpsilon() {
@@ -27,8 +33,11 @@ public class FunctionSolver {
 	public static int getIterations() {
 		return numberIterations;
 	}
-	public static boolean printsIteartions() {
+	public static boolean printsIterations() {
 		return printsIterations;
+	}
+	public static boolean getEnableDegrade() {
+		return enableDegrade;
 	}
 	
 	public static void main(String[] args) {
@@ -45,6 +54,8 @@ public class FunctionSolver {
 					numberIterations = Integer.parseInt(configs[1].trim());break;
 				case "printsIterations":
 					printsIterations = Boolean.parseBoolean(configs[1].trim());break;
+				case "printsTimeElapsed":
+					printsTimeElapsed = Boolean.parseBoolean(configs[1].trim());break;
 				case "optimizerOn":
 					optimizerOn = Boolean.parseBoolean(configs[1].trim());break;
 				case "numberSearchPoints":
@@ -57,6 +68,8 @@ public class FunctionSolver {
 						searchMethodOption = SearchMethodOption.UniformIntervals; break;
 					}					
 					break;
+				case "enableDegrade":
+					enableDegrade = Boolean.parseBoolean(configs[1].trim());break;
 				}
 			}
 			scanner.close();
@@ -79,7 +92,15 @@ public class FunctionSolver {
 		Object result = null;
 		if(optimizerOn) {
 			double[]interval = {Double.parseDouble(strArray[0]), Double.parseDouble(strArray[1])};
-			result = ((Optimizer) op).optimize(f, interval, searchMethod);
+			Optimizer optimizer = (Optimizer)op;
+			Instant start = Instant.now();
+			result = optimizer.optimize(f, interval, searchMethod);
+			if(printsTimeElapsed) {
+				Instant end = Instant.now();
+				Duration timeElapsed = Duration.between(start, end);
+				System.out.println(timeElapsed.toMinutes()+"\""+timeElapsed.toSecondsPart()+"."+timeElapsed.getNano());
+			}
+			System.out.println("Minimum = "+result+", ArgMin = "+optimizer.getArgMin());
 		}else {
 			switch(strArray.length) {
 			case 1:
@@ -92,6 +113,5 @@ public class FunctionSolver {
 				break;
 			}
 		}
-		System.out.println(result);
 	}
 }
