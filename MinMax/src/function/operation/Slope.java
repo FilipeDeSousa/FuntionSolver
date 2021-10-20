@@ -6,7 +6,19 @@ import function.SolvingFunction;
 public class Slope implements Operation {
 	@Override
 	public Double solve(SolvingFunction function, double point) {
-		double epsilon = FunctionSolver.getEpsilon()*point;
+		double epsilon;
+		if(point == 0)
+			epsilon = FunctionSolver.getEpsilon();
+		else
+			epsilon = FunctionSolver.getEpsilon()*point;
+		
+		/*Test
+		System.out.println(function.image(point + epsilon)-function.image(point));
+		System.out.println(epsilon);
+		System.out.println((function.image(point + epsilon)-function.image(point)) / epsilon);
+		System.exit(0);
+		//Test*/
+		
 		return (function.image(point + epsilon)-function.image(point)) / epsilon;
 	}
 

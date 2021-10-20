@@ -18,7 +18,11 @@ public class SlopeOrder implements Operation {
 	
 	@Override
 	public Double solve(SolvingFunction function, double point) {
-		double epsilon = Math.pow(FunctionSolver.getEpsilon(), 1.0/((double)order));
+		double epsilon;
+		if(point == 0)
+			epsilon = FunctionSolver.getEpsilon();
+		else
+			epsilon = Math.pow(FunctionSolver.getEpsilon(), 1.0/((double)order));
 		if(order>1) {
 			SlopeOrder lowerOrder = new SlopeOrder(--order);
 			return (lowerOrder.solve(function, point+epsilon)-lowerOrder.solve(function, point))/ epsilon;

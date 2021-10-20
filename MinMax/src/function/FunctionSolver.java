@@ -6,11 +6,19 @@ import java.util.Scanner;
 
 import function.operation.Operation;
 import function.operation.OperationFactory;
+import function.operation.Optimizer;
+import function.operation.search.RandomSearch;
+import function.operation.search.SearchMethod;
+import function.operation.search.SearchMethod.SearchMethodOption;
+import function.operation.search.UniformIntervalsSearch;
 
 public class FunctionSolver {
 	static double epsilon=1E-3;
 	static int numberIterations = 100;
 	static boolean printsIterations = false;
+	static boolean optimizerOn = false;
+	static int numberSearchPoints = 10;
+	static SearchMethod.SearchMethodOption searchMethodOption = SearchMethodOption.Random; static SearchMethod searchMethod;
 	
 	//Getters
 	public static double getEpsilon() {
@@ -37,9 +45,28 @@ public class FunctionSolver {
 					numberIterations = Integer.parseInt(configs[1].trim());break;
 				case "printsIterations":
 					printsIterations = Boolean.parseBoolean(configs[1].trim());break;
+				case "optimizerOn":
+					optimizerOn = Boolean.parseBoolean(configs[1].trim());break;
+				case "numberSearchPoints":
+					numberSearchPoints = Integer.parseInt(configs[1].trim());break;
+				case "searchMethod":
+					switch(configs[1].trim().toUpperCase()){
+					case "random":
+						searchMethodOption = SearchMethodOption.Random; break;
+					case "uniformIntervals":
+						searchMethodOption = SearchMethodOption.UniformIntervals; break;
+					}					
+					break;
 				}
 			}
 			scanner.close();
+			//Setups
+			switch(searchMethodOption) {
+			case Random:
+				searchMethod = new RandomSearch(numberSearchPoints);break;
+			case UniformIntervals:
+				searchMethod = new UniformIntervalsSearch(numberSearchPoints);break;
+			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -50,15 +77,20 @@ public class FunctionSolver {
 		SolvingFunction f = new SolvingFunction(args[1]);
 		String[] strArray = args[2].split(",");
 		Object result = null;
-		switch(strArray.length) {
-		case 1:
-			double point = Double.parseDouble(strArray[0]);
-			result = op.solve(f, point);
-			break;
-		case 2:
+		if(optimizerOn) {
 			double[]interval = {Double.parseDouble(strArray[0]), Double.parseDouble(strArray[1])};
-			result = op.solve(f, interval);
-			break;
+			result = ((Optimizer) op).optimize(f, interval, searchMethod);
+		}else {
+			switch(strArray.length) {
+			case 1:
+				double point = Double.parseDouble(strArray[0]);
+				result = op.solve(f, point);
+				break;
+			case 2:
+				double[]interval = {Double.parseDouble(strArray[0]), Double.parseDouble(strArray[1])};
+				result = op.solve(f, interval);
+				break;
+			}
 		}
 		System.out.println(result);
 	}
