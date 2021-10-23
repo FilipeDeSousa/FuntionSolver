@@ -1,28 +1,27 @@
 package function.operation.search;
 
-public class SearchPoint {
+import function.Point;
+
+public class SearchPoint extends Point{
 	//Attribute
-	double point;
 	boolean optimizable = true;
 	
 	//Constructor
-	public SearchPoint(double point) {
-		this.point = point;
+	public SearchPoint(double[] point) {
+		super(point);
 	}
 
 	//Getters
-	public double getPoint() {
-		return point;
-	}
 	public boolean isOptimizable() {
 		return optimizable;
 	}
 
 	//Setters
-	public void setPoint(double newPoint) {
-		point = newPoint;
-	}
 	public void setOptimizable(boolean optimizable) {
 		this.optimizable = optimizable;
+	}
+
+	public void setPoint(Point point) {
+		values = point.getValues();
 	}
 }

@@ -1,10 +1,11 @@
 package function.operation;
 
+import function.Point;
 import function.SolvingFunction;
 import function.operation.search.SearchMethod;
 
 public interface Optimizer extends Operation {
-	public Double argMin(SolvingFunction function, double point);
-	public double optimize(SolvingFunction function, double[] interval, SearchMethod searchMethod);
-	public double getArgMin();
+	public Point argMin(SolvingFunction function, Point point);
+	public Point getArgMin();
+	public double optimize(SolvingFunction f, Point[] interval, SearchMethod searchMethod);
 }

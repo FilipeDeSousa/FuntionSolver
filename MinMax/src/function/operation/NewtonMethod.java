@@ -1,22 +1,34 @@
 package function.operation;
 
 import function.FunctionSolver;
+import function.Point;
 import function.SolvingFunction;
 import function.operation.search.SearchMethod;
 import function.operation.search.SearchPoint;
 
 public class NewtonMethod implements Operation, Optimizer {
-	double argMin;
+	Point argMin;
 	
 	@Override
-	public Double solve(SolvingFunction function, double point) {
+	public Double solve(SolvingFunction function, Point point) {
 		for(int i=0; i<FunctionSolver.getIterations(); i++) {
 			double image = function.image(point);
-			double slope = new Slope().solve(function, point);
+			double[] gradient = new Gradient().solve(function, point);
+			double[] newValues = new double[Point.getDimensionality()];
+			double[] steps = new double[Point.getDimensionality()];
 			if(FunctionSolver.printsIterations())
-				System.out.println("Iteration " + (i+1) + ": x = "+point+", f(x) = "+image+", f'(x) = "+slope);
-			double step = image / slope ;
-			double newPoint = point - step;
+				System.out.print("Iteration " + (i+1) + ":");
+			for(int j=0; j<Point.getDimensionality(); j++) {
+				if(FunctionSolver.printsIterations()) {
+					String dimension = Point.getDimension(j);
+					System.out.print(" "+dimension+"="+point.getValue(j)+" f("+dimension+")="+image+" f'("+dimension+")="+gradient[j]);
+				}
+				steps[j] = image / gradient[j] ;
+				newValues[j] = point.getValue(j) - steps[j];
+			}
+			if(FunctionSolver.printsIterations())
+				System.out.println();
+			Point newPoint = new Point(newValues);
 			double newImage = function.image(newPoint);
 			if(FunctionSolver.getEnableDegrade())
 				point = newPoint;
@@ -24,97 +36,115 @@ public class NewtonMethod implements Operation, Optimizer {
 				point = newPoint;
 			//Altered nuance to avoid degradation
 			else {
-				while(newImage>image) {
-					step*=.5;
-					newPoint = point - step;
-					newImage = function.image(newPoint);
-				}
-				System.out.println("Avoiding degradation: step = "+step+" x = "+newPoint+", f(x) "+newImage);
+				newPoint = avoidDegradation(function, point, image, newImage, steps);
 			}
 		}
 		argMin = point;
 		return function.image(point);
 	}
 
-	@Override
-	public Object solve(SolvingFunction function, double[] interval) {
-		// TODO Auto-generated method stub
-		return null;
+	private Point avoidDegradation(SolvingFunction function, Point point, double image, double newImage, double[] steps) {
+		Point newPoint;
+		do{
+			double[] newValues = new double[Point.getDimensionality()];
+			for(int i=0; i<Point.getDimensionality(); i++) {
+				steps[i] *= .5;
+				newValues[i] = point.getValue(i)-steps[i];
+			}
+			newPoint = new Point(newValues);
+			newImage = function.image(newPoint);
+		}while(newImage>image);
+		if(FunctionSolver.printsIterations()) {
+			System.out.print("Avoiding degradation:");
+			for(int i=0; i<Point.getDimensionality(); i++) {
+				String dimension = Point.getDimension(i);
+				System.out.print(" step("+dimension+")="+steps[i]+" "+dimension+"="+newPoint.getValue(i));
+			}
+			System.out.println("f="+newImage);
+		}
+		return newPoint;
 	}
 
 	@Override
-	public Double argMin(SolvingFunction function, double point) {
-		if(FunctionSolver.printsIterations())
-			System.out.println("Initial step: x = "+point+", f(x) = "+function.image(point));
+	public Point argMin(SolvingFunction function, Point point) {
 		for(int i=0; i<FunctionSolver.getIterations(); i++) {
 			double image = function.image(point);
-			double slope = new Slope().solve(function, point);
-			point -= image / slope;
+			double[] gradient = new Gradient().solve(function, point);
+			double[] newValues = new double[Point.getDimensionality()];
+			double[] steps = new double[Point.getDimensionality()];
 			if(FunctionSolver.printsIterations())
-				System.out.println("Iteration " + (i+1) + ": x = "+point+", f(x) = "+function.image(point)+", f'(x) = "+slope);
+				System.out.print("Iteration " + (i+1) + ":");
+			for(int j=0; j<Point.getDimensionality(); j++) {
+				if(FunctionSolver.printsIterations()) {
+					String dimension = Point.getDimension(j);
+					System.out.print(" "+dimension+"="+point.getValue(j)+" f("+dimension+")="+image+" f'("+dimension+")="+gradient[j]);
+				}
+				steps[j] = image / gradient[j] ;
+				newValues[j] = point.getValue(j) - steps[j];
+			}
+			Point newPoint = new Point(newValues);
+			double newImage = function.image(newPoint);
+			if(FunctionSolver.getEnableDegrade())
+				point = newPoint;
+			else if(newImage<=image)
+				point = newPoint;
+			//Altered nuance to avoid degradation
+			else {
+				avoidDegradation(function, point, image, newImage, steps);
+			}
 		}
+		argMin = point;
 		return point;
 	}
 
 	@Override
-	public double optimize(SolvingFunction function, double[] interval, SearchMethod searchMethod) {
+	public double optimize(SolvingFunction function, Point[] interval, SearchMethod searchMethod) {
 		SearchPoint[] searchPoints = searchMethod.createSearchPoints(interval);
 		for(int i=0; i<FunctionSolver.getIterations(); i++) {
 			boolean optimizablePoints = false;
 			if(FunctionSolver.printsIterations())
 				System.out.println("Iteration "+(i+1)+":");
+			//Initialize images
+			double[] images = new double[searchPoints.length];
+			for(int j=0; j<images.length; j++)
+				images[j] = function.image(searchPoints[j]);
 			for(int j=0; j<searchPoints.length; j++) {
 				if(!searchPoints[j].isOptimizable())
 					continue;
-				double image = function.image(searchPoints[j].getPoint());
-				double slope = new Slope().solve(function, searchPoints[j].getPoint());
+				
+				double[] gradient = new Gradient().solve(function, searchPoints[j]);
+				double[] newValues = new double[Point.getDimensionality()], steps = new double[Point.getDimensionality()];
 				if(FunctionSolver.printsIterations())
-					System.out.print(" Point " + (j+1) + ": x = "+searchPoints[j].getPoint()+", f(x) = "+image+", f'(x) = "+slope);
-				//No further optimization possible
-				if(slope == 0 || image == 0) {
-					searchPoints[j].setOptimizable(false);
-					if(FunctionSolver.printsIterations())
-						System.out.println(" -> No furter optimization possible!");
-					continue;
+					System.out.print("Point "+j+":");
+				for(int k=0; k<Point.getDimensionality(); k++) {
+					if(FunctionSolver.printsIterations()) {
+						String dimension = Point.getDimension(k);
+						System.out.print(" "+dimension+"="+searchPoints[j].getValue(k)+" f'("+dimension+")="+gradient[k]);
+					}
+					//No further optimization possible
+					if(gradient[k] == 0 || images[j] == 0) {
+						searchPoints[j].setOptimizable(false);
+						if(FunctionSolver.printsIterations())
+							System.out.println(" -> No furter optimization possible!");
+						continue;
+					}
+					steps[k] = images[j] / gradient[k];
+					newValues[k] = searchPoints[j].getValue(k) - steps[k];
 				}
-				double step = image / slope;
-				double newPoint = searchPoints[j].getPoint() - step;
-				double newImage = function.image(newPoint);
 				if(FunctionSolver.printsIterations())
-					System.out.println(", x_{i+1} = "+newPoint+", f(x_{i+1}) = " + newImage);
+					System.out.println(" f="+images[j]);
+				Point newPoint = new Point(newValues);
+				double newImage = function.image(newPoint);
 				
 				if(FunctionSolver.getEnableDegrade()) {
 					searchPoints[j].setPoint(newPoint);
 					optimizablePoints = true;
-				}else if(newImage<=image) {
+				}else if(newImage<=images[j]) {
 					searchPoints[j].setPoint(newPoint);
 					optimizablePoints = true;
 				//Altered nuance to avoid degradation
 				}else {
-					while(newImage>image) {
-						step*=.5;
-						
-						/*Test
-						System.out.print("Step = " + step);
-						if(step == Double.NEGATIVE_INFINITY || step == Double.POSITIVE_INFINITY) {
-							System.out.print("STEP NAN!!!");
-							System.exit(0);
-						}
-						//Test*/
-						
-						if(step == 0) {
-							searchPoints[j].setOptimizable(false);
-							if(FunctionSolver.printsIterations())
-								System.out.println(" -> No furter optimization possible!");
-							continue;
-						}
-						newPoint = searchPoints[j].getPoint() - step;
-						newImage = function.image(newPoint);
-					}
-					searchPoints[j].setPoint(newPoint);
-					optimizablePoints = true;
-					if(FunctionSolver.printsIterations())
-						System.out.println("Avoiding degradation: step = "+step+" x = "+newPoint+", f(x) "+newImage);
+					avoidDegradation(function, newPoint, newImage, newImage, steps);
 				}
 			}
 			if(!optimizablePoints)
@@ -123,9 +153,9 @@ public class NewtonMethod implements Operation, Optimizer {
 		//Select best to return
 		double minimum = Double.MAX_VALUE;
 		for(SearchPoint point: searchPoints) {
-			double image = function.image(point.getPoint());
+			double image = function.image(point);
 			if(image<minimum) {
-				argMin  = point.getPoint();
+				argMin  = point;
 				minimum = image;
 			}
 		}
@@ -135,7 +165,7 @@ public class NewtonMethod implements Operation, Optimizer {
 
 	//Getter
 	@Override
-	public double getArgMin() {
+	public Point getArgMin() {
 		return argMin;
 	}
 

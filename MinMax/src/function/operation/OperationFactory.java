@@ -6,7 +6,7 @@ public class OperationFactory {
 		Operation op = null;
 		switch(opType) {
 		case "Slope":
-			op = new Slope(); break;
+			op = new Gradient(); break;
 		case "NewtonMethod":
 			op = new NewtonMethod();break;
 		}

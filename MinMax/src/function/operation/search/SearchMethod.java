@@ -1,5 +1,7 @@
 package function.operation.search;
 
+import function.Point;
+
 public abstract class SearchMethod {
 	//Enums
 	public enum SearchMethodOption {
@@ -11,7 +13,7 @@ public abstract class SearchMethod {
 	SearchPoint[] points;
 	
 	//Abstract methods
-	public abstract SearchPoint[] createSearchPoints(double[] interval);
+	public abstract SearchPoint[] createSearchPoints(Point[] interval);
 
 	//Constructor
 	public SearchMethod(int numberPoints) {

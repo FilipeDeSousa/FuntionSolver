@@ -88,13 +88,19 @@ public class FunctionSolver {
 		OperationFactory opFactory = new OperationFactory();
 		Operation op = opFactory.create(args[0]);
 		SolvingFunction f = new SolvingFunction(args[1]);
-		String[] strArray = args[2].split(",");
+		String[] dimensions = args[2].split(",");
+		Point.setDimensions(dimensions);
+		String[] interval = args[3].split(";");
 		Object result = null;
 		if(optimizerOn) {
-			double[]interval = {Double.parseDouble(strArray[0]), Double.parseDouble(strArray[1])};
+			String[] p1Array = interval[0].split(",");
+			Point p1 = new Point(p1Array);
+			String[] p2Array = interval[1].split(",");
+			Point p2 = new Point(p2Array);
+			Point[] pointInterval = {p1, p2};
 			Optimizer optimizer = (Optimizer)op;
 			Instant start = Instant.now();
-			result = optimizer.optimize(f, interval, searchMethod);
+			result = optimizer.optimize(f, pointInterval, searchMethod);
 			if(printsTimeElapsed) {
 				Instant end = Instant.now();
 				Duration timeElapsed = Duration.between(start, end);
@@ -102,16 +108,9 @@ public class FunctionSolver {
 			}
 			System.out.println("Minimum = "+result+", ArgMin = "+optimizer.getArgMin());
 		}else {
-			switch(strArray.length) {
-			case 1:
-				double point = Double.parseDouble(strArray[0]);
-				result = op.solve(f, point);
-				break;
-			case 2:
-				double[]interval = {Double.parseDouble(strArray[0]), Double.parseDouble(strArray[1])};
-				result = op.solve(f, interval);
-				break;
-			}
+			String[] pArray = interval[0].split(",");
+			Point point = new Point(pArray);
+			result = op.solve(f, point);
 		}
 	}
 }

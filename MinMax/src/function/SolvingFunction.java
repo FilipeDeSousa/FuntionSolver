@@ -109,7 +109,7 @@ public class SolvingFunction {
 		return expression.length();
 	}
 
-	public double image(Double x) {
+	public double image(Point x) {
 		double y = 0;
 		try {
 			/*Test
@@ -117,7 +117,10 @@ public class SolvingFunction {
 			//System.exit(0);
 			//Test*/
 			
-			engine.eval("x = "+x);
+			String variables = "";
+			for(int i=0; i<Point.length(); i++)
+				variables += Point.getDimension(i)+"="+x.getValue(i);
+			engine.eval(variables);
 			y = (double) engine.eval(f);
 			
 			/*Test
